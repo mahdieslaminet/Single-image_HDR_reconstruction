@@ -1,0 +1,15 @@
+def build_model(input_shape):
+    inputs = Input(shape=input_shape)
+
+    # Encoder
+    x = Conv2D(64, (3, 3), padding='same', activation='relu')(inputs)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(256, (3, 3), padding='same', activation='relu')(x)
+
+    # Decoder
+    x = Conv2DTranspose(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2DTranspose(64, (3, 3), padding='same', activation='relu')(x)
+    outputs = Conv2DTranspose(3, (3, 3), padding='same', activation='sigmoid')(x)
+
+    model = Model(inputs, outputs)
+    return model
