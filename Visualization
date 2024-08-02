@@ -1,0 +1,10 @@
+def visualize_results(X_test, predictions, num_images=5):
+    plt.figure(figsize=(10, 5))
+    for i in range(num_images):
+        plt.subplot(2, num_images, i + 1)
+        plt.imshow(X_test[i])
+        plt.axis('off')
+        plt.subplot(2, num_images, i + 1 + num_images)
+        plt.imshow(predictions[i])
+        plt.axis('off')
+    plt.show()
