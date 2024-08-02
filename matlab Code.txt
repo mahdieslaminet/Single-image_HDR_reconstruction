@@ -1,0 +1,81 @@
+% Sample functions
+function images = loadSampleLDRImages()
+    images = {rand(256, 256, 3), rand(256, 256, 3), rand(256, 256, 3)};
+end
+
+function images = loadSampleHDRImages()
+    images = {rand(256, 256, 3) * 2, rand(256, 256, 3) * 2, rand(256, 256, 3) * 2};
+end
+
+function net = createPrimaryNetwork()
+    layers = [
+        imageInputLayer([256 256 3])
+        convolution2dLayer(3, 64, 'Padding', 'same')
+        reluLayer
+        convolution2dLayer(3, 64, 'Padding', 'same')
+        reluLayer
+        fullyConnectedLayer(256*256*3)
+        regressionLayer];
+    net = assembleNetwork(layers);
+end
+
+function net = createSecondaryNetwork()
+    layers = [
+        imageInputLayer([256 256 3])
+        convolution2dLayer(3, 64, 'Padding', 'same')
+        reluLayer
+        convolution2dLayer(3, 64, 'Padding', 'same')
+        reluLayer
+        fullyConnectedLayer(256*256*3)
+        regressionLayer];
+    net = assembleNetwork(layers);
+end
+
+function adjusted_HDR = attentionMechanism(HDR_images)
+    adjusted_HDR = HDR_images;
+end
+
+function net = trainNetwork(LDR_images, HDR_images, net)
+    options = trainingOptions('sgdm', ...
+        'InitialLearnRate',0.01, ...
+        'MaxEpochs',10, ...
+        'MiniBatchSize',5, ...
+        'Plots','training-progress');
+    trainingData = augmentedImageDatastore([256 256 3], LDR_images, HDR_images);
+    net = trainNetwork(trainingData, net.Layers, options);
+end
+
+function output = predict(net, images)
+    output = cell(size(images));
+    for i = 1:numel(images)
+        output{i} = predict(net, images{i});
+    end
+end
+
+% Main script
+LDR_images = loadSampleLDRImages();
+HDR_images = loadSampleHDRImages();
+
+primaryNet = createPrimaryNetwork();
+secondaryNet = createSecondaryNetwork();
+
+primaryNet = trainNetwork(LDR_images, HDR_images, primaryNet);
+generated_HDR = predict(primaryNet, LDR_images);
+
+secondaryNet = trainNetwork(generated_HDR, LDR_images, secondaryNet);
+reconstructed_LDR = predict(secondaryNet, generated_HDR);
+
+adjusted_HDR = attentionMechanism(generated_HDR);
+
+figure;
+subplot(1, 3, 1);
+imshow(LDR_images{1});
+title('Original LDR');
+
+subplot(1, 3, 2);
+imshow(generated_HDR{1});
+title('Reconstructed HDR');
+
+subplot(1, 3, 3);
+imshow(adjusted_HDR{1});
+title('Adjusted HDR');
