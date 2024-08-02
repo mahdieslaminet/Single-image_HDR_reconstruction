@@ -1,0 +1,63 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, Activation, Concatenate
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import MeanSquaredError
+
+# Data Preprocessing
+def load_data():
+    # This function should load and preprocess the dataset
+    # For simplicity, we are using dummy data
+    X_train = np.random.rand(100, 128, 128, 3)
+    Y_train = np.random.rand(100, 128, 128, 3)
+    return X_train, Y_train
+
+# Model Architecture
+def build_model(input_shape):
+    inputs = Input(shape=input_shape)
+
+    # Encoder
+    x = Conv2D(64, (3, 3), padding='same', activation='relu')(inputs)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(256, (3, 3), padding='same', activation='relu')(x)
+
+    # Decoder
+    x = Conv2DTranspose(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2DTranspose(64, (3, 3), padding='same', activation='relu')(x)
+    outputs = Conv2DTranspose(3, (3, 3), padding='same', activation='sigmoid')(x)
+
+    model = Model(inputs, outputs)
+    return model
+
+# Training Loop
+def train_model(model, X_train, Y_train, epochs=10, batch_size=16):
+    model.compile(optimizer=Adam(learning_rate=0.001), loss=MeanSquaredError())
+    history = model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size)
+    return history
+
+# Evaluation
+def evaluate_model(model, X_test):
+    predictions = model.predict(X_test)
+    return predictions
+
+# Visualization
+def visualize_results(X_test, predictions, num_images=5):
+    plt.figure(figsize=(10, 5))
+    for i in range(num_images):
+        plt.subplot(2, num_images, i + 1)
+        plt.imshow(X_test[i])
+        plt.axis('off')
+        plt.subplot(2, num_images, i + 1 + num_images)
+        plt.imshow(predictions[i])
+        plt.axis('off')
+    plt.show()
+
+# Main Execution
+X_train, Y_train = load_data()
+input_shape = X_train.shape[1:]
+model = build_model(input_shape)
+history = train_model(model, X_train, Y_train)
+X_test, Y_test = load_data()  # Using new random data as test data for demonstration
+predictions = evaluate_model(model, X_test)
+visualize_results(X_test, predictions)
